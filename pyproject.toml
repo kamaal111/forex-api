@@ -10,6 +10,7 @@ packages = [{include = "forex_api"}]
 python = "^3.10"
 fastapi = "^0.91.0"
 uvicorn = {extras = ["standard"], version = "^0.20.0"}
+google-cloud-firestore = "^2.9.1"
 
 
 [tool.poetry.group.dev.dependencies]
