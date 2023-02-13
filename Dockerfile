@@ -1,21 +1,12 @@
-FROM python:3.10
+FROM golang:1.20-bullseye
 
-ENV PYTHONFAULTHANDLER=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONHASHSEED=random \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_VERSION=1.2.1
+WORKDIR /usr/src/app
 
-RUN pip install "poetry==$POETRY_VERSION"
+# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
 
-WORKDIR /code
+COPY . .
+RUN go build -v -o /usr/local/bin/app
 
-COPY ./pyproject.toml ./pyproject.toml /code/
-
-RUN poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi --no-root
-
-COPY . /code
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["app"]
