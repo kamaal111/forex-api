@@ -1,14 +1,19 @@
 package routers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/kamaal111/forex-api/utils"
 )
 
 func Start() {
-	serverAddress := utils.UnwrapEnvironment("SERVER_ADDRESS")
+	serverAddress := os.Getenv("SERVER_ADDRESS")
+	if serverAddress == "" {
+		serverAddress = fmt.Sprintf(":%s", utils.UnwrapEnvironment("PORT"))
+	}
 
 	mux := http.NewServeMux()
 	ratesGroup(mux)

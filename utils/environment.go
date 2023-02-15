@@ -3,13 +3,17 @@ package utils
 import (
 	"log"
 	"os"
+	"strings"
 )
 
-func UnwrapEnvironment(key string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		log.Fatalf("%s not defined in environment\n", key)
+func UnwrapEnvironment(keys ...string) string {
+	for _, key := range keys {
+		value := os.Getenv(key)
+		if value != "" {
+			return value
+		}
 	}
 
-	return value
+	log.Fatalf("%s not defined in environment\n", strings.Join(keys, ", "))
+	return "" // unreachable code
 }
