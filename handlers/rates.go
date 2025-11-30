@@ -84,7 +84,7 @@ func makeSymbolsArray(raw string, base string) []string {
 	}
 
 	var symbolsArray []string
-	for _, item := range strings.Split(symbols, ",") {
+	for item := range strings.SplitSeq(symbols, ",") {
 		if item != base && utils.ArrayContains(CURRENCIES, item) {
 			symbolsArray = append(symbolsArray, item)
 		}
@@ -114,9 +114,10 @@ var CURRENCIES = []string{
 	"SKK",
 	"CHF",
 	"ISK",
+	"ILS",
 	"NOK",
 	"HRK",
-	// "RUB",
+	"RUB",
 	"TRL",
 	"TRY",
 	"AUD",
