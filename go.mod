@@ -1,6 +1,6 @@
 module github.com/kamaal111/forex-api
 
-go 1.25.4
+go 1.25
 
 require (
 	cloud.google.com/go/firestore v1.20.0

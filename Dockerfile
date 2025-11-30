@@ -1,20 +1,18 @@
 # App builder
-FROM golang:1.25.4-bookworm AS builder
+FROM golang:1.25.4-alpine AS builder
+
+RUN apk add --no-cache tzdata ca-certificates
 
 WORKDIR /go/src/github.com/kamaal111/forex-api/
+
+# Download dependencies first (better layer caching)
+COPY go.mod go.sum ./
+RUN go mod download -x && go mod verify
+
+# Copy source and build
 COPY . .
-# Download dependencies.
-RUN apt update && apt install -y \
-    tzdata ca-certificates
-RUN go mod download -x
-RUN go mod verify
-# Run update certificates
-RUN update-ca-certificates
-# Build the binary.
-ENV CGO_ENABLED=0
-ENV GOOS=linux
-ENV GOARCH=amd64
-RUN go build -ldflags="-w -s" -v -o /go/bin/forex-api .
+ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+RUN go build -ldflags="-w -s" -trimpath -v -o /go/bin/forex-api .
 
 # Build a smaller image with the minimum required things to run.
 FROM scratch

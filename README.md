@@ -17,6 +17,7 @@ A lightweight REST API for retrieving foreign exchange rates, built with Go and 
 - Google Cloud Platform account with Firestore enabled
 - [just](https://github.com/casey/just) command runner (optional, for development)
 - [reflex](https://github.com/cespare/reflex) for hot-reloading during development
+- Node.js 18+ and npm (for running integration tests via Firebase emulator)
 
 ## Environment Variables
 
@@ -193,6 +194,21 @@ just start-db
 
 This starts the Firestore emulator on `127.0.0.1:8080`.
 
-## License
+## Testing
 
-This project is open source. See the repository for license details.
+- Unit tests:
+  - `just test` or `npm run test:unit`
+- Integration tests (Firestore emulator managed automatically):
+  - `just test-integration` or `npm test`
+- All tests (unit + integration):
+  - `just test-all` or `npm run test:all`
+- Coverage:
+  - `just test-cover` or `just test-cover-html`
+
+Requirements for integration tests:
+- Node.js 18+; `firebase-tools` is installed as a dev dependency and started by the npm scripts.
+- No external GCP access is required; the tests seed data into the emulator.
+
+## Contributing
+
+See AGENTS.md for contributor guidelines, coding style, and PR expectations.

@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
-	"strings"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/api/iterator"
@@ -13,11 +13,48 @@ import (
 	"github.com/kamaal111/forex-api/utils"
 )
 
-type exchangeRateRecord struct {
-	Base  string             `json:"base"`
-	Date  string             `json:"date"`
-	Rates map[string]float64 `json:"rates"`
+type FirestoreRatesRepository struct {
+	client *firestore.Client
+	ctx    context.Context
 }
+
+func NewFirestoreRatesRepository(ctx context.Context, client *firestore.Client) *FirestoreRatesRepository {
+	return &FirestoreRatesRepository{client: client, ctx: ctx}
+}
+
+func (r *FirestoreRatesRepository) GetLatestRate(base string) (*ExchangeRateRecord, error) {
+	documents := r.client.Collection("exchange_rates").
+		OrderBy("date", firestore.Desc).
+		Where("base", "==", base).
+		Limit(1).
+		Documents(r.ctx)
+
+	var document *firestore.DocumentSnapshot
+	var err error
+	for document == nil {
+		document, err = documents.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if document == nil {
+		return nil, nil
+	}
+
+	var record ExchangeRateRecord
+	err = document.DataTo(&record)
+	if err != nil {
+		return nil, err
+	}
+
+	return &record, nil
+}
+
+var ErrRatesNotFound = errors.New("rates not found")
 
 func GetLatest(writer http.ResponseWriter, request *http.Request) {
 	ctx := context.Background()
@@ -28,43 +65,21 @@ func GetLatest(writer http.ResponseWriter, request *http.Request) {
 	}
 	defer client.Close()
 
-	base := strings.ToUpper(strings.TrimSpace(request.URL.Query().Get("base")))
-	if !utils.ArrayContains(CURRENCIES, base) {
-		base = "EUR"
-	}
+	repo := NewFirestoreRatesRepository(ctx, client)
+	service := NewRatesService(repo)
 
-	documents := client.Collection("exchange_rates").OrderBy("date", firestore.Desc).Where("base", "==", base).Limit(1).Documents(ctx)
-	var document *firestore.DocumentSnapshot
-	for document == nil {
-		document, err = documents.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			utils.ErrorHandler(writer, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
+	base := request.URL.Query().Get("base")
+	symbols := request.URL.Query().Get("symbols")
 
-	if document == nil {
-		utils.ErrorHandler(writer, "Rates not found", http.StatusNotFound)
+	record, err := service.GetLatestRate(base, symbols)
+	if err != nil {
+		utils.ErrorHandler(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	var record exchangeRateRecord
-	err = document.DataTo(&record)
-	if err != nil {
-		utils.ErrorHandler(writer, err.Error(), http.StatusInternalServerError)
-	}
-
-	symbols := makeSymbolsArray(request.URL.Query().Get("symbols"), base)
-	if len(symbols) > 0 {
-		recordCopy := record
-		recordCopy.Rates = make(map[string]float64)
-		for _, symbol := range symbols {
-			recordCopy.Rates[symbol] = record.Rates[symbol]
-		}
-		record = recordCopy
+	if record == nil {
+		utils.ErrorHandler(writer, "Rates not found", http.StatusNotFound)
+		return
 	}
 
 	output, err := json.Marshal(record)
@@ -75,65 +90,4 @@ func GetLatest(writer http.ResponseWriter, request *http.Request) {
 
 	writer.Header().Set("content-type", "application/json")
 	writer.Write(output)
-}
-
-func makeSymbolsArray(raw string, base string) []string {
-	symbols := strings.ToUpper(strings.TrimSpace(raw))
-	if len(symbols) == 0 {
-		return []string{}
-	}
-
-	var symbolsArray []string
-	for item := range strings.SplitSeq(symbols, ",") {
-		if item != base && utils.ArrayContains(CURRENCIES, item) {
-			symbolsArray = append(symbolsArray, item)
-		}
-	}
-	return symbolsArray
-}
-
-var CURRENCIES = []string{
-	"EUR",
-	"USD",
-	"JPY",
-	"BGN",
-	"CYP",
-	"CZK",
-	"DKK",
-	"EEK",
-	"GBP",
-	"HUF",
-	"LTL",
-	"LVL",
-	"MTL",
-	"PLN",
-	"ROL",
-	"RON",
-	"SEK",
-	"SIT",
-	"SKK",
-	"CHF",
-	"ISK",
-	"ILS",
-	"NOK",
-	"HRK",
-	"RUB",
-	"TRL",
-	"TRY",
-	"AUD",
-	"BRL",
-	"CAD",
-	"CNY",
-	"HKD",
-	"IDR",
-	"ILS",
-	"INR",
-	"KRW",
-	"MXN",
-	"MYR",
-	"NZD",
-	"PHP",
-	"SGD",
-	"THB",
-	"ZAR",
 }
