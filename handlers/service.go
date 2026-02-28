@@ -64,7 +64,7 @@ func NormalizeBase(base string) string {
 
 func MakeSymbolsArray(raw string, base string) []string {
 	symbols := strings.ToUpper(strings.TrimSpace(raw))
-	if len(symbols) == 0 {
+	if len(symbols) == 0 || symbols == "*" {
 		return []string{}
 	}
 

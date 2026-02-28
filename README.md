@@ -103,7 +103,7 @@ Retrieves the most recent exchange rates for a given base currency.
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `base` | Base currency code (e.g., `USD`, `EUR`) | `EUR` |
-| `symbols` | Comma-separated list of currency codes to filter (e.g., `USD,GBP,JPY`) | All currencies |
+| `symbols` | Comma-separated list of currency codes to filter (e.g., `USD,GBP,JPY`), or `*` to return all currencies | All currencies |
 
 #### Example Request
 

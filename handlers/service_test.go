@@ -140,6 +140,20 @@ func TestMakeSymbolsArray(t *testing.T) {
 			want:    []string{},
 			wantLen: 0,
 		},
+		{
+			name:    "wildcard symbol returns all",
+			raw:     "*",
+			base:    "EUR",
+			want:    []string{},
+			wantLen: 0,
+		},
+		{
+			name:    "wildcard symbol with different base returns all",
+			raw:     "*",
+			base:    "USD",
+			want:    []string{},
+			wantLen: 0,
+		},
 	}
 
 	for _, tt := range tests {
@@ -190,15 +204,15 @@ func TestRatesService_GetLatestRate(t *testing.T) {
 		wantRates      map[string]float64
 	}{
 		{
-			name:           "successful fetch with no symbol filter",
-			base:           "EUR",
-			symbols:        "",
-			mockRecord:     sampleRecord,
-			mockErr:        nil,
-			wantErr:        false,
-			wantNil:        false,
-			wantBase:       "EUR",
-			wantRatesCount: 4,
+			name:        "successful fetch with no symbol filter returns all rates",
+			base:        "EUR",
+			symbols:     "",
+			mockRecord:  sampleRecord,
+			mockErr:     nil,
+			wantErr:     false,
+			wantNil:     false,
+			wantBase:    "EUR",
+			wantRates:   map[string]float64{"USD": 1.08, "GBP": 0.86, "JPY": 161.5, "CHF": 0.94},
 		},
 		{
 			name:       "successful fetch with single symbol filter",
@@ -270,6 +284,17 @@ func TestRatesService_GetLatestRate(t *testing.T) {
 			wantErr:    false,
 			wantNil:    false,
 			wantBase:   "EUR",
+		},
+		{
+			name:        "wildcard symbol returns all rates",
+			base:        "EUR",
+			symbols:     "*",
+			mockRecord:  sampleRecord,
+			mockErr:     nil,
+			wantErr:     false,
+			wantNil:     false,
+			wantBase:    "EUR",
+			wantRates:   map[string]float64{"USD": 1.08, "GBP": 0.86, "JPY": 161.5, "CHF": 0.94},
 		},
 	}
 
