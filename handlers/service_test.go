@@ -140,6 +140,20 @@ func TestMakeSymbolsArray(t *testing.T) {
 			want:    []string{},
 			wantLen: 0,
 		},
+		{
+			name:    "wildcard symbol returns all",
+			raw:     "*",
+			base:    "EUR",
+			want:    []string{},
+			wantLen: 0,
+		},
+		{
+			name:    "wildcard symbol with different base returns all",
+			raw:     "*",
+			base:    "USD",
+			want:    []string{},
+			wantLen: 0,
+		},
 	}
 
 	for _, tt := range tests {
@@ -270,6 +284,17 @@ func TestRatesService_GetLatestRate(t *testing.T) {
 			wantErr:    false,
 			wantNil:    false,
 			wantBase:   "EUR",
+		},
+		{
+			name:           "wildcard symbol returns all rates",
+			base:           "EUR",
+			symbols:        "*",
+			mockRecord:     sampleRecord,
+			mockErr:        nil,
+			wantErr:        false,
+			wantNil:        false,
+			wantBase:       "EUR",
+			wantRatesCount: 4,
 		},
 	}
 
