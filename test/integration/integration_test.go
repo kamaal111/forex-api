@@ -241,7 +241,11 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 	}
 	defer tc.Teardown()
 
-	t.Run("returns 200 with a non-empty list of currency symbols", func(t *testing.T) {
+	t.Run("returns empty list when no data exists in the database", func(t *testing.T) {
+		if err := tc.ClearCollection("exchange_rates"); err != nil {
+			t.Fatalf("Failed to clear collection: %v", err)
+		}
+
 		resp, err := tc.Server.GetSymbols()
 		if err != nil {
 			t.Fatalf("Failed to make request: %v", err)
@@ -262,17 +266,38 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Failed to decode response: %v", err)
 		}
 
-		if len(symbols) == 0 {
-			t.Error("Expected at least one symbol, got none")
+		if len(symbols) != 0 {
+			t.Errorf("Expected empty symbols list, got %v", symbols)
 		}
 	})
 
-	t.Run("response includes well-known currencies usable as base or symbol in rates endpoint", func(t *testing.T) {
+	t.Run("returns only symbols that have rates in the database", func(t *testing.T) {
+		if err := tc.ClearCollection("exchange_rates"); err != nil {
+			t.Fatalf("Failed to clear collection: %v", err)
+		}
+
+		_, err := tc.DB.Collection("exchange_rates").Doc("EUR-2025-11-21").Set(tc.Ctx, map[string]interface{}{
+			"base": "EUR",
+			"date": "2025-11-21",
+			"rates": map[string]float64{
+				"USD": 1.08,
+				"GBP": 0.86,
+			},
+		})
+		if err != nil {
+			t.Fatalf("Failed to seed data: %v", err)
+		}
+
 		resp, err := tc.Server.GetSymbols()
 		if err != nil {
 			t.Fatalf("Failed to make request: %v", err)
 		}
 		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			t.Fatalf("Expected status 200, got %d: %s", resp.StatusCode, string(body))
+		}
 
 		var symbols []string
 		if err := json.NewDecoder(resp.Body).Decode(&symbols); err != nil {
@@ -284,10 +309,16 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 			symbolSet[s] = true
 		}
 
-		for _, currency := range []string{"EUR", "USD", "GBP", "JPY"} {
-			if !symbolSet[currency] {
-				t.Errorf("Expected symbols list to contain %s", currency)
+		// EUR (base), USD and GBP (rate keys) were seeded and must be present
+		for _, expected := range []string{"EUR", "USD", "GBP"} {
+			if !symbolSet[expected] {
+				t.Errorf("Expected %s to be in symbols, got %v", expected, symbols)
 			}
+		}
+
+		// JPY was not seeded so must not appear
+		if symbolSet["JPY"] {
+			t.Errorf("JPY should not be in symbols since it has no rates in the database, got %v", symbols)
 		}
 	})
 }
