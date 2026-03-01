@@ -21,13 +21,13 @@ func GetSymbols(writer http.ResponseWriter, request *http.Request) {
 	repo := NewFirestoreRatesRepository(ctx, client)
 	service := NewRatesService(repo)
 
-	symbols, err := service.GetAllSymbols()
+	record, err := service.GetAllSymbols()
 	if err != nil {
 		utils.ErrorHandler(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	output, err := json.Marshal(symbols)
+	output, err := json.Marshal(record)
 	if err != nil {
 		utils.ErrorHandler(writer, err.Error(), http.StatusInternalServerError)
 		return

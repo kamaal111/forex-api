@@ -13,6 +13,11 @@ type ExchangeRateRecord struct {
 	Rates map[string]float64 `json:"rates"`
 }
 
+type SymbolsRecord struct {
+	Date    string   `json:"date"`
+	Symbols []string `json:"symbols"`
+}
+
 type ErrorResponse struct {
 	Message string `json:"message"`
 }
@@ -241,7 +246,7 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 	}
 	defer tc.Teardown()
 
-	t.Run("returns empty list when no data exists in the database", func(t *testing.T) {
+	t.Run("returns empty record when no data exists in the database", func(t *testing.T) {
 		if err := tc.ClearCollection("symbols"); err != nil {
 			t.Fatalf("Failed to clear collection: %v", err)
 		}
@@ -261,28 +266,39 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 			t.Errorf("Expected Content-Type application/json, got %s", contentType)
 		}
 
-		var symbols []string
-		if err := json.NewDecoder(resp.Body).Decode(&symbols); err != nil {
+		var record SymbolsRecord
+		if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
 			t.Fatalf("Failed to decode response: %v", err)
 		}
 
-		if len(symbols) != 0 {
-			t.Errorf("Expected empty symbols list, got %v", symbols)
+		if len(record.Symbols) != 0 {
+			t.Errorf("Expected empty symbols list, got %v", record.Symbols)
 		}
 	})
 
-	t.Run("returns only symbols that have rates in the database", func(t *testing.T) {
+	t.Run("returns only the latest symbols from the database", func(t *testing.T) {
 		if err := tc.ClearCollection("symbols"); err != nil {
 			t.Fatalf("Failed to clear collection: %v", err)
 		}
 
-		seededSymbols := []string{"EUR", "USD", "GBP"}
-		_, err := tc.DB.Collection("symbols").Doc("2025-11-21").Set(tc.Ctx, map[string]interface{}{
-			"date":    "2025-11-21",
-			"symbols": seededSymbols,
+		// Seed an older document
+		_, err := tc.DB.Collection("symbols").Doc("2025-11-20").Set(tc.Ctx, map[string]interface{}{
+			"date":    "2025-11-20",
+			"symbols": []string{"EUR", "USD"},
 		})
 		if err != nil {
-			t.Fatalf("Failed to seed data: %v", err)
+			t.Fatalf("Failed to seed older data: %v", err)
+		}
+
+		// Seed the newest document — this should be returned
+		latestDate := "2025-11-21"
+		latestSymbols := []string{"EUR", "USD", "GBP"}
+		_, err = tc.DB.Collection("symbols").Doc(latestDate).Set(tc.Ctx, map[string]interface{}{
+			"date":    latestDate,
+			"symbols": latestSymbols,
+		})
+		if err != nil {
+			t.Fatalf("Failed to seed latest data: %v", err)
 		}
 
 		resp, err := tc.Server.GetSymbols()
@@ -296,21 +312,25 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Expected status 200, got %d: %s", resp.StatusCode, string(body))
 		}
 
-		var symbols []string
-		if err := json.NewDecoder(resp.Body).Decode(&symbols); err != nil {
+		var record SymbolsRecord
+		if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
 			t.Fatalf("Failed to decode response: %v", err)
 		}
 
-		if len(symbols) != len(seededSymbols) {
-			t.Errorf("Expected %d symbols, got %d: %v", len(seededSymbols), len(symbols), symbols)
+		if record.Date != latestDate {
+			t.Errorf("Expected date %q, got %q", latestDate, record.Date)
 		}
 
-		for i, expected := range seededSymbols {
-			if i >= len(symbols) {
+		if len(record.Symbols) != len(latestSymbols) {
+			t.Errorf("Expected %d symbols, got %d: %v", len(latestSymbols), len(record.Symbols), record.Symbols)
+		}
+
+		for i, expected := range latestSymbols {
+			if i >= len(record.Symbols) {
 				break
 			}
-			if symbols[i] != expected {
-				t.Errorf("Expected symbols[%d] = %q, got %q", i, expected, symbols[i])
+			if record.Symbols[i] != expected {
+				t.Errorf("Expected symbols[%d] = %q, got %q", i, expected, record.Symbols[i])
 			}
 		}
 	})

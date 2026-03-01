@@ -107,7 +107,7 @@ curl "http://localhost:8000/v1/rates/symbols"
 #### Example Response
 
 ```json
-["EUR","USD","GBP","JPY","CHF","AUD","CAD"]
+{"date":"2025-12-05","symbols":["EUR","USD","GBP","JPY","CHF","AUD","CAD"]}
 ```
 
 ### Get Latest Exchange Rates
