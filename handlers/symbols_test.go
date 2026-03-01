@@ -19,6 +19,10 @@ func TestableSymbolsHandler(repo RatesRepository) http.HandlerFunc {
 			utils.ErrorHandler(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		if record == nil {
+			utils.ErrorHandler(writer, "symbols not found", http.StatusNotFound)
+			return
+		}
 
 		output, err := json.Marshal(record)
 		if err != nil {
@@ -34,28 +38,28 @@ func TestableSymbolsHandler(repo RatesRepository) http.HandlerFunc {
 func TestGetSymbolsHandler(t *testing.T) {
 	tests := []struct {
 		name           string
-		mockRecord     SymbolsRecord
+		mockRecord     *SymbolsRecord
 		mockErr        error
 		wantStatusCode int
 		wantRecord     *SymbolsRecord
 	}{
 		{
 			name:           "returns only symbols that have rates in the database",
-			mockRecord:     SymbolsRecord{Date: "2025-11-21", Symbols: []string{"EUR", "USD", "GBP"}},
+			mockRecord:     &SymbolsRecord{Date: "2025-11-21", Symbols: []string{"EUR", "USD", "GBP"}},
 			mockErr:        nil,
 			wantStatusCode: http.StatusOK,
 			wantRecord:     &SymbolsRecord{Date: "2025-11-21", Symbols: []string{"EUR", "USD", "GBP"}},
 		},
 		{
-			name:           "returns empty record when no data exists in the database",
-			mockRecord:     SymbolsRecord{Symbols: []string{}},
+			name:           "returns 404 when no data exists in the database",
+			mockRecord:     nil,
 			mockErr:        nil,
-			wantStatusCode: http.StatusOK,
-			wantRecord:     &SymbolsRecord{Date: "", Symbols: []string{}},
+			wantStatusCode: http.StatusNotFound,
+			wantRecord:     nil,
 		},
 		{
 			name:           "returns 500 on database error",
-			mockRecord:     SymbolsRecord{},
+			mockRecord:     nil,
 			mockErr:        errors.New("database error"),
 			wantStatusCode: http.StatusInternalServerError,
 			wantRecord:     nil,
@@ -65,7 +69,7 @@ func TestGetSymbolsHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := &MockRatesRepository{
-				GetAllSymbolsFunc: func() (SymbolsRecord, error) {
+				GetAllSymbolsFunc: func() (*SymbolsRecord, error) {
 					return tt.mockRecord, tt.mockErr
 				},
 			}
@@ -81,12 +85,12 @@ func TestGetSymbolsHandler(t *testing.T) {
 				t.Errorf("GetSymbols() status = %d, want %d", recorder.Code, tt.wantStatusCode)
 			}
 
-			contentType := recorder.Header().Get("content-type")
-			if contentType != "application/json" {
-				t.Errorf("GetSymbols() content-type = %q, want %q", contentType, "application/json")
-			}
-
 			if tt.wantRecord != nil {
+				contentType := recorder.Header().Get("content-type")
+				if contentType != "application/json" {
+					t.Errorf("GetSymbols() content-type = %q, want %q", contentType, "application/json")
+				}
+
 				var record SymbolsRecord
 				if err := json.NewDecoder(recorder.Body).Decode(&record); err != nil {
 					t.Fatalf("failed to decode response: %v", err)

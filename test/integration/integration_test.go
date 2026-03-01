@@ -246,7 +246,7 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 	}
 	defer tc.Teardown()
 
-	t.Run("returns empty record when no data exists in the database", func(t *testing.T) {
+	t.Run("returns 404 when no data exists in the database", func(t *testing.T) {
 		if err := tc.ClearCollection("symbols"); err != nil {
 			t.Fatalf("Failed to clear collection: %v", err)
 		}
@@ -257,22 +257,8 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status 200, got %d", resp.StatusCode)
-		}
-
-		contentType := resp.Header.Get("Content-Type")
-		if contentType != "application/json" {
-			t.Errorf("Expected Content-Type application/json, got %s", contentType)
-		}
-
-		var record SymbolsRecord
-		if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
-
-		if len(record.Symbols) != 0 {
-			t.Errorf("Expected empty symbols list, got %v", record.Symbols)
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("Expected status 404, got %d", resp.StatusCode)
 		}
 	})
 

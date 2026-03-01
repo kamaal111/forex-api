@@ -54,7 +54,7 @@ func (r *FirestoreRatesRepository) GetLatestRate(base string) (*ExchangeRateReco
 	return &record, nil
 }
 
-func (r *FirestoreRatesRepository) GetAllSymbols() (SymbolsRecord, error) {
+func (r *FirestoreRatesRepository) GetAllSymbols() (*SymbolsRecord, error) {
 	documents := r.client.Collection("symbols").
 		OrderBy("date", firestore.Desc).
 		Limit(1).
@@ -63,18 +63,18 @@ func (r *FirestoreRatesRepository) GetAllSymbols() (SymbolsRecord, error) {
 
 	document, err := documents.Next()
 	if errors.Is(err, iterator.Done) {
-		return SymbolsRecord{Symbols: []string{}}, nil
+		return nil, nil
 	}
 	if err != nil {
-		return SymbolsRecord{}, err
+		return nil, err
 	}
 
 	var record SymbolsRecord
 	if err := document.DataTo(&record); err != nil {
-		return SymbolsRecord{}, err
+		return nil, err
 	}
 
-	return record, nil
+	return &record, nil
 }
 
 var ErrRatesNotFound = errors.New("rates not found")

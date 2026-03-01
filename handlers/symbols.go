@@ -26,6 +26,10 @@ func GetSymbols(writer http.ResponseWriter, request *http.Request) {
 		utils.ErrorHandler(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if record == nil {
+		utils.ErrorHandler(writer, "symbols not found", http.StatusNotFound)
+		return
+	}
 
 	output, err := json.Marshal(record)
 	if err != nil {

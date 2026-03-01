@@ -19,7 +19,7 @@ type SymbolsRecord struct {
 
 type RatesRepository interface {
 	GetLatestRate(base string) (*ExchangeRateRecord, error)
-	GetAllSymbols() (SymbolsRecord, error)
+	GetAllSymbols() (*SymbolsRecord, error)
 }
 
 type RatesService struct {
@@ -60,7 +60,7 @@ func (s *RatesService) GetLatestRate(base string, symbols string) (*ExchangeRate
 	return record, nil
 }
 
-func (s *RatesService) GetAllSymbols() (SymbolsRecord, error) {
+func (s *RatesService) GetAllSymbols() (*SymbolsRecord, error) {
 	return s.Repository.GetAllSymbols()
 }
 

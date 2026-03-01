@@ -7,7 +7,7 @@ import (
 
 type MockRatesRepository struct {
 	GetLatestRateFunc func(base string) (*ExchangeRateRecord, error)
-	GetAllSymbolsFunc func() (SymbolsRecord, error)
+	GetAllSymbolsFunc func() (*SymbolsRecord, error)
 }
 
 func (m *MockRatesRepository) GetLatestRate(base string) (*ExchangeRateRecord, error) {
@@ -17,11 +17,11 @@ func (m *MockRatesRepository) GetLatestRate(base string) (*ExchangeRateRecord, e
 	return nil, nil
 }
 
-func (m *MockRatesRepository) GetAllSymbols() (SymbolsRecord, error) {
+func (m *MockRatesRepository) GetAllSymbols() (*SymbolsRecord, error) {
 	if m.GetAllSymbolsFunc != nil {
 		return m.GetAllSymbolsFunc()
 	}
-	return SymbolsRecord{Symbols: []string{}}, nil
+	return nil, nil
 }
 
 func TestNormalizeBase(t *testing.T) {
