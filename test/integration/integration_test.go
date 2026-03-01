@@ -242,7 +242,7 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 	defer tc.Teardown()
 
 	t.Run("returns empty list when no data exists in the database", func(t *testing.T) {
-		if err := tc.ClearCollection("exchange_rates"); err != nil {
+		if err := tc.ClearCollection("symbols"); err != nil {
 			t.Fatalf("Failed to clear collection: %v", err)
 		}
 
@@ -272,17 +272,14 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 	})
 
 	t.Run("returns only symbols that have rates in the database", func(t *testing.T) {
-		if err := tc.ClearCollection("exchange_rates"); err != nil {
+		if err := tc.ClearCollection("symbols"); err != nil {
 			t.Fatalf("Failed to clear collection: %v", err)
 		}
 
-		_, err := tc.DB.Collection("exchange_rates").Doc("EUR-2025-11-21").Set(tc.Ctx, map[string]interface{}{
-			"base": "EUR",
-			"date": "2025-11-21",
-			"rates": map[string]float64{
-				"USD": 1.08,
-				"GBP": 0.86,
-			},
+		seededSymbols := []string{"EUR", "USD", "GBP"}
+		_, err := tc.DB.Collection("symbols").Doc("2025-11-21").Set(tc.Ctx, map[string]interface{}{
+			"date":    "2025-11-21",
+			"symbols": seededSymbols,
 		})
 		if err != nil {
 			t.Fatalf("Failed to seed data: %v", err)
@@ -304,21 +301,17 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Failed to decode response: %v", err)
 		}
 
-		symbolSet := make(map[string]bool, len(symbols))
-		for _, s := range symbols {
-			symbolSet[s] = true
+		if len(symbols) != len(seededSymbols) {
+			t.Errorf("Expected %d symbols, got %d: %v", len(seededSymbols), len(symbols), symbols)
 		}
 
-		// EUR (base), USD and GBP (rate keys) were seeded and must be present
-		for _, expected := range []string{"EUR", "USD", "GBP"} {
-			if !symbolSet[expected] {
-				t.Errorf("Expected %s to be in symbols, got %v", expected, symbols)
+		for i, expected := range seededSymbols {
+			if i >= len(symbols) {
+				break
 			}
-		}
-
-		// JPY was not seeded so must not appear
-		if symbolSet["JPY"] {
-			t.Errorf("JPY should not be in symbols since it has no rates in the database, got %v", symbols)
+			if symbols[i] != expected {
+				t.Errorf("Expected symbols[%d] = %q, got %q", i, expected, symbols[i])
+			}
 		}
 	})
 }

@@ -96,7 +96,7 @@ docker run -dp 8000:8000 --name forex-api \
 GET /v1/rates/symbols
 ```
 
-Returns the full list of all supported currency symbols. Use this as a preflight check to discover which currencies are available before calling the rates endpoint.
+Returns the list of all currency symbols that currently exist in the database. Use this as a preflight check to discover which currencies are available before calling the rates endpoint.
 
 #### Example Request
 
@@ -107,7 +107,7 @@ curl "http://localhost:8000/v1/rates/symbols"
 #### Example Response
 
 ```json
-["EUR","USD","JPY","BGN","CYP","CZK","DKK","EEK","GBP","HUF","LTL","LVL","MTL","PLN","ROL","RON","SEK","SIT","SKK","CHF","ISK","ILS","NOK","HRK","RUB","TRL","TRY","AUD","BRL","CAD","CNY","HKD","IDR","INR","KRW","MXN","MYR","NZD","PHP","SGD","THB","ZAR"]
+["EUR","USD","GBP","JPY","CHF","AUD","CAD"]
 ```
 
 ### Get Latest Exchange Rates

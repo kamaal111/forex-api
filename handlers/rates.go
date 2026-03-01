@@ -54,37 +54,32 @@ func (r *FirestoreRatesRepository) GetLatestRate(base string) (*ExchangeRateReco
 	return &record, nil
 }
 
+type symbolsRecord struct {
+	Date    string   `firestore:"date"`
+	Symbols []string `firestore:"symbols"`
+}
+
 func (r *FirestoreRatesRepository) GetAllSymbols() ([]string, error) {
-	documents := r.client.Collection("exchange_rates").Documents(r.ctx)
+	documents := r.client.Collection("symbols").
+		OrderBy("date", firestore.Desc).
+		Limit(1).
+		Documents(r.ctx)
+	defer documents.Stop()
 
-	symbolSet := make(map[string]bool)
-	for {
-		document, err := documents.Next()
-		if errors.Is(err, iterator.Done) {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		var record ExchangeRateRecord
-		if err := document.DataTo(&record); err != nil {
-			return nil, err
-		}
-
-		symbolSet[record.Base] = true
-		for symbol := range record.Rates {
-			symbolSet[symbol] = true
-		}
+	document, err := documents.Next()
+	if errors.Is(err, iterator.Done) {
+		return []string{}, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	symbols := make([]string, 0, len(symbolSet))
-	for _, currency := range Currencies {
-		if symbolSet[currency] {
-			symbols = append(symbols, currency)
-		}
+	var record symbolsRecord
+	if err := document.DataTo(&record); err != nil {
+		return nil, err
 	}
-	return symbols, nil
+
+	return record.Symbols, nil
 }
 
 var ErrRatesNotFound = errors.New("rates not found")

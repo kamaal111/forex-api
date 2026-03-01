@@ -96,13 +96,12 @@ func TestGetSymbolsHandler(t *testing.T) {
 					t.Errorf("GetSymbols() returned %d symbols, want %d", len(symbols), len(tt.wantSymbols))
 				}
 
-				symbolSet := make(map[string]bool, len(symbols))
-				for _, s := range symbols {
-					symbolSet[s] = true
-				}
-				for _, expected := range tt.wantSymbols {
-					if !symbolSet[expected] {
-						t.Errorf("GetSymbols() missing expected symbol %q", expected)
+				for i, expected := range tt.wantSymbols {
+					if i >= len(symbols) {
+						break
+					}
+					if symbols[i] != expected {
+						t.Errorf("GetSymbols() at index %d = %q, want %q", i, symbols[i], expected)
 					}
 				}
 			}
