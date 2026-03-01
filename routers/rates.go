@@ -8,4 +8,5 @@ import (
 
 func ratesGroup(mux *http.ServeMux) {
 	mux.Handle("/v1/rates/latest", loggerMiddleware(http.HandlerFunc(handlers.GetLatest)))
+	mux.Handle("/v1/rates/symbols", loggerMiddleware(http.HandlerFunc(handlers.GetSymbols)))
 }

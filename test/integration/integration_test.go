@@ -230,6 +230,68 @@ func TestGetLatestEndpoint(t *testing.T) {
 	})
 }
 
+func TestGetSymbolsEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	tc := NewTestContext()
+	if err := tc.Setup(0); err != nil {
+		t.Fatalf("Failed to setup test context: %v", err)
+	}
+	defer tc.Teardown()
+
+	t.Run("returns 200 with a non-empty list of currency symbols", func(t *testing.T) {
+		resp, err := tc.Server.GetSymbols()
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", resp.StatusCode)
+		}
+
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != "application/json" {
+			t.Errorf("Expected Content-Type application/json, got %s", contentType)
+		}
+
+		var symbols []string
+		if err := json.NewDecoder(resp.Body).Decode(&symbols); err != nil {
+			t.Fatalf("Failed to decode response: %v", err)
+		}
+
+		if len(symbols) == 0 {
+			t.Error("Expected at least one symbol, got none")
+		}
+	})
+
+	t.Run("response includes well-known currencies usable as base or symbol in rates endpoint", func(t *testing.T) {
+		resp, err := tc.Server.GetSymbols()
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		var symbols []string
+		if err := json.NewDecoder(resp.Body).Decode(&symbols); err != nil {
+			t.Fatalf("Failed to decode response: %v", err)
+		}
+
+		symbolSet := make(map[string]bool, len(symbols))
+		for _, s := range symbols {
+			symbolSet[s] = true
+		}
+
+		for _, currency := range []string{"EUR", "USD", "GBP", "JPY"} {
+			if !symbolSet[currency] {
+				t.Errorf("Expected symbols list to contain %s", currency)
+			}
+		}
+	})
+}
+
 func TestContentType(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
