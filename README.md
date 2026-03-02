@@ -113,7 +113,7 @@ curl "http://localhost:8000/v1/rates/symbols"
 ### Get All Available Currencies with Names
 
 ```
-GET /v1/rates/currencies
+GET /v1/currencies
 ```
 
 Returns the latest available currencies from the database, each with a human-readable name. Returns `404` if no symbols data has been stored yet.
@@ -121,7 +121,7 @@ Returns the latest available currencies from the database, each with a human-rea
 #### Example Request
 
 ```bash
-curl "http://localhost:8000/v1/rates/currencies"
+curl "http://localhost:8000/v1/currencies"
 ```
 
 #### Example Response
