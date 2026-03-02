@@ -110,6 +110,33 @@ curl "http://localhost:8000/v1/rates/symbols"
 {"date":"2025-12-05","symbols":["EUR","USD","GBP","JPY","CHF","AUD","CAD"]}
 ```
 
+### Get All Available Currency Symbols with Names
+
+```
+GET /v1/rates/named-symbols
+```
+
+Returns the latest available currency symbols from the database, each with a human-readable name. Returns `404` if no symbols data has been stored yet.
+
+#### Example Request
+
+```bash
+curl "http://localhost:8000/v1/rates/named-symbols"
+```
+
+#### Example Response
+
+```json
+{
+  "date": "2025-12-05",
+  "symbols": [
+    {"symbol": "EUR", "name": "Euro"},
+    {"symbol": "USD", "name": "US Dollar"},
+    {"symbol": "GBP", "name": "British Pound Sterling"}
+  ]
+}
+```
+
 ### Get Latest Exchange Rates
 
 ```
