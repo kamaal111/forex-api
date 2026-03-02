@@ -9,7 +9,7 @@ import (
 	"github.com/kamaal111/forex-api/utils"
 )
 
-func GetNamedSymbols(writer http.ResponseWriter, request *http.Request) {
+func GetCurrencies(writer http.ResponseWriter, request *http.Request) {
 	ctx := context.Background()
 	client, err := database.CreateClient(ctx)
 	if err != nil {

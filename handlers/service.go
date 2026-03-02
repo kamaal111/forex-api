@@ -22,9 +22,9 @@ type NamedSymbol struct {
 	Name   string `json:"name"`
 }
 
-type NamedSymbolsRecord struct {
-	Date    string        `json:"date"`
-	Symbols []NamedSymbol `json:"symbols"`
+type CurrenciesRecord struct {
+	Date string        `json:"date"`
+	Data []NamedSymbol `json:"data"`
 }
 
 type RatesRepository interface {
@@ -74,7 +74,7 @@ func (s *RatesService) GetAllSymbols() (*SymbolsRecord, error) {
 	return s.Repository.GetAllSymbols()
 }
 
-func (s *RatesService) GetAllNamedSymbols() (*NamedSymbolsRecord, error) {
+func (s *RatesService) GetAllNamedSymbols() (*CurrenciesRecord, error) {
 	record, err := s.Repository.GetAllSymbols()
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (s *RatesService) GetAllNamedSymbols() (*NamedSymbolsRecord, error) {
 		named = append(named, NamedSymbol{Symbol: symbol, Name: name})
 	}
 
-	return &NamedSymbolsRecord{Date: record.Date, Symbols: named}, nil
+	return &CurrenciesRecord{Date: record.Date, Data: named}, nil
 }
 
 func NormalizeBase(base string) string {
@@ -117,51 +117,6 @@ func MakeSymbolsArray(raw string, base string) []string {
 		}
 	}
 	return symbolsArray
-}
-
-var Currencies = []string{
-	"EUR",
-	"USD",
-	"JPY",
-	"BGN",
-	"CYP",
-	"CZK",
-	"DKK",
-	"EEK",
-	"GBP",
-	"HUF",
-	"LTL",
-	"LVL",
-	"MTL",
-	"PLN",
-	"ROL",
-	"RON",
-	"SEK",
-	"SIT",
-	"SKK",
-	"CHF",
-	"ISK",
-	"ILS",
-	"NOK",
-	"HRK",
-	"RUB",
-	"TRL",
-	"TRY",
-	"AUD",
-	"BRL",
-	"CAD",
-	"CNY",
-	"HKD",
-	"IDR",
-	"INR",
-	"KRW",
-	"MXN",
-	"MYR",
-	"NZD",
-	"PHP",
-	"SGD",
-	"THB",
-	"ZAR",
 }
 
 var CurrencyNames = map[string]string{
@@ -208,3 +163,11 @@ var CurrencyNames = map[string]string{
 	"THB": "Thai Baht",
 	"ZAR": "South African Rand",
 }
+
+var Currencies = func() []string {
+	keys := make([]string, 0, len(CurrencyNames))
+	for k := range CurrencyNames {
+		keys = append(keys, k)
+	}
+	return keys
+}()

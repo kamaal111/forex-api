@@ -10,7 +10,7 @@ import (
 	"github.com/kamaal111/forex-api/utils"
 )
 
-func TestableNamedSymbolsHandler(repo RatesRepository) http.HandlerFunc {
+func TestableCurrenciesHandler(repo RatesRepository) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		service := NewRatesService(repo)
 
@@ -35,7 +35,7 @@ func TestableNamedSymbolsHandler(repo RatesRepository) http.HandlerFunc {
 	}
 }
 
-func TestGetNamedSymbolsHandler(t *testing.T) {
+func TestGetCurrenciesHandler(t *testing.T) {
 	tests := []struct {
 		name           string
 		mockRecord     *SymbolsRecord
@@ -78,41 +78,41 @@ func TestGetNamedSymbolsHandler(t *testing.T) {
 				},
 			}
 
-			handler := TestableNamedSymbolsHandler(mockRepo)
+			handler := TestableCurrenciesHandler(mockRepo)
 
-			req := httptest.NewRequest(http.MethodGet, "/v1/rates/named-symbols", nil)
+			req := httptest.NewRequest(http.MethodGet, "/v1/rates/currencies", nil)
 			recorder := httptest.NewRecorder()
 
 			handler(recorder, req)
 
 			if recorder.Code != tt.wantStatusCode {
-				t.Errorf("GetNamedSymbols() status = %d, want %d", recorder.Code, tt.wantStatusCode)
+				t.Errorf("GetCurrencies() status = %d, want %d", recorder.Code, tt.wantStatusCode)
 			}
 
 			if tt.wantSymbols != nil {
 				contentType := recorder.Header().Get("content-type")
 				if contentType != "application/json" {
-					t.Errorf("GetNamedSymbols() content-type = %q, want %q", contentType, "application/json")
+					t.Errorf("GetCurrencies() content-type = %q, want %q", contentType, "application/json")
 				}
 
-				var record NamedSymbolsRecord
+				var record CurrenciesRecord
 				if err := json.NewDecoder(recorder.Body).Decode(&record); err != nil {
 					t.Fatalf("failed to decode response: %v", err)
 				}
 
-				if len(record.Symbols) != len(tt.wantSymbols) {
-					t.Errorf("GetNamedSymbols() returned %d symbols, want %d", len(record.Symbols), len(tt.wantSymbols))
+				if len(record.Data) != len(tt.wantSymbols) {
+					t.Errorf("GetCurrencies() returned %d symbols, want %d", len(record.Data), len(tt.wantSymbols))
 				}
 
 				for i, expected := range tt.wantSymbols {
-					if i >= len(record.Symbols) {
+					if i >= len(record.Data) {
 						break
 					}
-					if record.Symbols[i].Symbol != expected.Symbol {
-						t.Errorf("GetNamedSymbols() symbols[%d].symbol = %q, want %q", i, record.Symbols[i].Symbol, expected.Symbol)
+					if record.Data[i].Symbol != expected.Symbol {
+						t.Errorf("GetCurrencies() data[%d].symbol = %q, want %q", i, record.Data[i].Symbol, expected.Symbol)
 					}
-					if record.Symbols[i].Name != expected.Name {
-						t.Errorf("GetNamedSymbols() symbols[%d].name = %q, want %q", i, record.Symbols[i].Name, expected.Name)
+					if record.Data[i].Name != expected.Name {
+						t.Errorf("GetCurrencies() data[%d].name = %q, want %q", i, record.Data[i].Name, expected.Name)
 					}
 				}
 			}

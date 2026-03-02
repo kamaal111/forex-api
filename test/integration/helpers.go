@@ -156,8 +156,8 @@ func (s *ServerProcess) GetSymbols() (*http.Response, error) {
 	return http.Get(url)
 }
 
-func (s *ServerProcess) GetNamedSymbols() (*http.Response, error) {
-	url := fmt.Sprintf("%s/v1/rates/named-symbols", s.baseURL)
+func (s *ServerProcess) GetCurrencies() (*http.Response, error) {
+	url := fmt.Sprintf("%s/v1/rates/currencies", s.baseURL)
 	return http.Get(url)
 }
 

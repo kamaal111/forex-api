@@ -27,9 +27,9 @@ type NamedSymbol struct {
 	Name   string `json:"name"`
 }
 
-type NamedSymbolsRecord struct {
-	Date    string        `json:"date"`
-	Symbols []NamedSymbol `json:"symbols"`
+type CurrenciesRecord struct {
+	Date string        `json:"date"`
+	Data []NamedSymbol `json:"data"`
 }
 
 func TestGetLatestEndpoint(t *testing.T) {
@@ -332,7 +332,7 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 	})
 }
 
-func TestGetNamedSymbolsEndpoint(t *testing.T) {
+func TestGetCurrenciesEndpoint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
@@ -348,7 +348,7 @@ func TestGetNamedSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Failed to clear collection: %v", err)
 		}
 
-		resp, err := tc.Server.GetNamedSymbols()
+		resp, err := tc.Server.GetCurrencies()
 		if err != nil {
 			t.Fatalf("Failed to make request: %v", err)
 		}
@@ -372,7 +372,7 @@ func TestGetNamedSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Failed to seed data: %v", err)
 		}
 
-		resp, err := tc.Server.GetNamedSymbols()
+		resp, err := tc.Server.GetCurrencies()
 		if err != nil {
 			t.Fatalf("Failed to make request: %v", err)
 		}
@@ -383,7 +383,7 @@ func TestGetNamedSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Expected status 200, got %d: %s", resp.StatusCode, string(body))
 		}
 
-		var record NamedSymbolsRecord
+		var record CurrenciesRecord
 		if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
 			t.Fatalf("Failed to decode response: %v", err)
 		}
@@ -398,17 +398,17 @@ func TestGetNamedSymbolsEndpoint(t *testing.T) {
 			{Symbol: "GBP", Name: "British Pound Sterling"},
 		}
 
-		if len(record.Symbols) != len(wantSymbols) {
-			t.Fatalf("Expected %d symbols, got %d: %v", len(wantSymbols), len(record.Symbols), record.Symbols)
+		if len(record.Data) != len(wantSymbols) {
+			t.Fatalf("Expected %d symbols, got %d: %v", len(wantSymbols), len(record.Data), record.Data)
 		}
 
 		for i, want := range wantSymbols {
-			got := record.Symbols[i]
+			got := record.Data[i]
 			if got.Symbol != want.Symbol {
-				t.Errorf("symbols[%d].symbol = %q, want %q", i, got.Symbol, want.Symbol)
+				t.Errorf("data[%d].symbol = %q, want %q", i, got.Symbol, want.Symbol)
 			}
 			if got.Name != want.Name {
-				t.Errorf("symbols[%d].name = %q, want %q", i, got.Name, want.Name)
+				t.Errorf("data[%d].name = %q, want %q", i, got.Name, want.Name)
 			}
 		}
 	})
@@ -434,7 +434,7 @@ func TestGetNamedSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Failed to seed latest data: %v", err)
 		}
 
-		resp, err := tc.Server.GetNamedSymbols()
+		resp, err := tc.Server.GetCurrencies()
 		if err != nil {
 			t.Fatalf("Failed to make request: %v", err)
 		}
@@ -445,7 +445,7 @@ func TestGetNamedSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Expected status 200, got %d: %s", resp.StatusCode, string(body))
 		}
 
-		var record NamedSymbolsRecord
+		var record CurrenciesRecord
 		if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
 			t.Fatalf("Failed to decode response: %v", err)
 		}
@@ -454,8 +454,8 @@ func TestGetNamedSymbolsEndpoint(t *testing.T) {
 			t.Errorf("Expected date %q, got %q", "2025-11-21", record.Date)
 		}
 
-		if len(record.Symbols) != 3 {
-			t.Errorf("Expected 3 symbols from latest entry, got %d: %v", len(record.Symbols), record.Symbols)
+		if len(record.Data) != 3 {
+			t.Errorf("Expected 3 symbols from latest entry, got %d: %v", len(record.Data), record.Data)
 		}
 	})
 
@@ -472,7 +472,7 @@ func TestGetNamedSymbolsEndpoint(t *testing.T) {
 			t.Fatalf("Failed to seed data: %v", err)
 		}
 
-		resp, err := tc.Server.GetNamedSymbols()
+		resp, err := tc.Server.GetCurrencies()
 		if err != nil {
 			t.Fatalf("Failed to make request: %v", err)
 		}
