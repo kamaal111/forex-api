@@ -12,8 +12,14 @@ type ExchangeRateRecord struct {
 	Rates map[string]float64 `json:"rates"`
 }
 
+type SymbolsRecord struct {
+	Date    string   `json:"date" firestore:"date"`
+	Symbols []string `json:"symbols" firestore:"symbols"`
+}
+
 type RatesRepository interface {
 	GetLatestRate(base string) (*ExchangeRateRecord, error)
+	GetAllSymbols() (*SymbolsRecord, error)
 }
 
 type RatesService struct {
@@ -52,6 +58,10 @@ func (s *RatesService) GetLatestRate(base string, symbols string) (*ExchangeRate
 	}
 
 	return record, nil
+}
+
+func (s *RatesService) GetAllSymbols() (*SymbolsRecord, error) {
+	return s.Repository.GetAllSymbols()
 }
 
 func NormalizeBase(base string) string {

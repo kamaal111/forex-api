@@ -90,6 +90,26 @@ docker run -dp 8000:8000 --name forex-api \
 
 ## API Endpoints
 
+### Get All Available Currency Symbols
+
+```
+GET /v1/rates/symbols
+```
+
+Returns the latest available currency symbols from the database. Use this as a preflight check to discover which currencies are available before calling the rates endpoint. Returns `404` if no symbols data has been stored yet.
+
+#### Example Request
+
+```bash
+curl "http://localhost:8000/v1/rates/symbols"
+```
+
+#### Example Response
+
+```json
+{"date":"2025-12-05","symbols":["EUR","USD","GBP","JPY","CHF","AUD","CAD"]}
+```
+
 ### Get Latest Exchange Rates
 
 ```

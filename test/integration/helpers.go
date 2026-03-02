@@ -151,6 +151,11 @@ func (s *ServerProcess) BaseURL() string {
 	return s.baseURL
 }
 
+func (s *ServerProcess) GetSymbols() (*http.Response, error) {
+	url := fmt.Sprintf("%s/v1/rates/symbols", s.baseURL)
+	return http.Get(url)
+}
+
 func (s *ServerProcess) GetLatest(base, symbols string) (*http.Response, error) {
 	url := fmt.Sprintf("%s/v1/rates/latest", s.baseURL)
 	if base != "" || symbols != "" {
