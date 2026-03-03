@@ -17,9 +17,15 @@ type SymbolsRecord struct {
 	Symbols []string `json:"symbols" firestore:"symbols"`
 }
 
+type CurrencyInfo struct {
+	Name string
+	Sign string
+}
+
 type NamedSymbol struct {
 	Symbol string `json:"symbol"`
 	Name   string `json:"name"`
+	Sign   string `json:"sign"`
 }
 
 type CurrenciesRecord struct {
@@ -85,11 +91,9 @@ func (s *RatesService) GetAllNamedSymbols() (*CurrenciesRecord, error) {
 
 	named := make([]NamedSymbol, 0, len(record.Symbols))
 	for _, symbol := range record.Symbols {
-		name, ok := CurrencyNames[symbol]
-		if !ok {
-			name = symbol
+		if info, ok := CurrencyNames[symbol]; ok {
+			named = append(named, NamedSymbol{Symbol: symbol, Name: info.Name, Sign: info.Sign})
 		}
-		named = append(named, NamedSymbol{Symbol: symbol, Name: name})
 	}
 
 	return &CurrenciesRecord{Date: record.Date, Data: named}, nil
@@ -119,49 +123,49 @@ func MakeSymbolsArray(raw string, base string) []string {
 	return symbolsArray
 }
 
-var CurrencyNames = map[string]string{
-	"EUR": "Euro",
-	"USD": "US Dollar",
-	"JPY": "Japanese Yen",
-	"BGN": "Bulgarian Lev",
-	"CYP": "Cypriot Pound",
-	"CZK": "Czech Koruna",
-	"DKK": "Danish Krone",
-	"EEK": "Estonian Kroon",
-	"GBP": "British Pound Sterling",
-	"HUF": "Hungarian Forint",
-	"LTL": "Lithuanian Litas",
-	"LVL": "Latvian Lats",
-	"MTL": "Maltese Lira",
-	"PLN": "Polish Zloty",
-	"ROL": "Romanian Leu (old)",
-	"RON": "Romanian Leu",
-	"SEK": "Swedish Krona",
-	"SIT": "Slovenian Tolar",
-	"SKK": "Slovak Koruna",
-	"CHF": "Swiss Franc",
-	"ISK": "Icelandic Krona",
-	"ILS": "Israeli New Shekel",
-	"NOK": "Norwegian Krone",
-	"HRK": "Croatian Kuna",
-	"RUB": "Russian Ruble",
-	"TRL": "Turkish Lira (old)",
-	"TRY": "Turkish Lira",
-	"AUD": "Australian Dollar",
-	"BRL": "Brazilian Real",
-	"CAD": "Canadian Dollar",
-	"CNY": "Chinese Yuan",
-	"HKD": "Hong Kong Dollar",
-	"IDR": "Indonesian Rupiah",
-	"INR": "Indian Rupee",
-	"KRW": "South Korean Won",
-	"MXN": "Mexican Peso",
-	"MYR": "Malaysian Ringgit",
-	"NZD": "New Zealand Dollar",
-	"PHP": "Philippine Peso",
-	"SGD": "Singapore Dollar",
-	"THB": "Thai Baht",
-	"ZAR": "South African Rand",
+var CurrencyNames = map[string]CurrencyInfo{
+	"EUR": {Name: "Euro", Sign: "€"},
+	"USD": {Name: "US Dollar", Sign: "$"},
+	"JPY": {Name: "Japanese Yen", Sign: "¥"},
+	"BGN": {Name: "Bulgarian Lev", Sign: "лв"},
+	"CYP": {Name: "Cypriot Pound", Sign: "£"},
+	"CZK": {Name: "Czech Koruna", Sign: "Kč"},
+	"DKK": {Name: "Danish Krone", Sign: "kr"},
+	"EEK": {Name: "Estonian Kroon", Sign: "kr"},
+	"GBP": {Name: "British Pound Sterling", Sign: "£"},
+	"HUF": {Name: "Hungarian Forint", Sign: "Ft"},
+	"LTL": {Name: "Lithuanian Litas", Sign: "Lt"},
+	"LVL": {Name: "Latvian Lats", Sign: "Ls"},
+	"MTL": {Name: "Maltese Lira", Sign: "₤"},
+	"PLN": {Name: "Polish Zloty", Sign: "zł"},
+	"ROL": {Name: "Romanian Leu (old)", Sign: "lei"},
+	"RON": {Name: "Romanian Leu", Sign: "lei"},
+	"SEK": {Name: "Swedish Krona", Sign: "kr"},
+	"SIT": {Name: "Slovenian Tolar", Sign: "SIT"},
+	"SKK": {Name: "Slovak Koruna", Sign: "Sk"},
+	"CHF": {Name: "Swiss Franc", Sign: "Fr"},
+	"ISK": {Name: "Icelandic Krona", Sign: "kr"},
+	"ILS": {Name: "Israeli New Shekel", Sign: "₪"},
+	"NOK": {Name: "Norwegian Krone", Sign: "kr"},
+	"HRK": {Name: "Croatian Kuna", Sign: "kn"},
+	"RUB": {Name: "Russian Ruble", Sign: "₽"},
+	"TRL": {Name: "Turkish Lira (old)", Sign: "₤"},
+	"TRY": {Name: "Turkish Lira", Sign: "₺"},
+	"AUD": {Name: "Australian Dollar", Sign: "$"},
+	"BRL": {Name: "Brazilian Real", Sign: "R$"},
+	"CAD": {Name: "Canadian Dollar", Sign: "$"},
+	"CNY": {Name: "Chinese Yuan", Sign: "¥"},
+	"HKD": {Name: "Hong Kong Dollar", Sign: "$"},
+	"IDR": {Name: "Indonesian Rupiah", Sign: "Rp"},
+	"INR": {Name: "Indian Rupee", Sign: "₹"},
+	"KRW": {Name: "South Korean Won", Sign: "₩"},
+	"MXN": {Name: "Mexican Peso", Sign: "$"},
+	"MYR": {Name: "Malaysian Ringgit", Sign: "RM"},
+	"NZD": {Name: "New Zealand Dollar", Sign: "$"},
+	"PHP": {Name: "Philippine Peso", Sign: "₱"},
+	"SGD": {Name: "Singapore Dollar", Sign: "$"},
+	"THB": {Name: "Thai Baht", Sign: "฿"},
+	"ZAR": {Name: "South African Rand", Sign: "R"},
 }
 
 var Currencies = func() []string {
