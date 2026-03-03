@@ -25,6 +25,7 @@ type ErrorResponse struct {
 type NamedSymbol struct {
 	Symbol string `json:"symbol"`
 	Name   string `json:"name"`
+	Sign   string `json:"sign"`
 }
 
 type CurrenciesRecord struct {
@@ -393,9 +394,9 @@ func TestGetCurrenciesEndpoint(t *testing.T) {
 		}
 
 		wantSymbols := []NamedSymbol{
-			{Symbol: "EUR", Name: "Euro"},
-			{Symbol: "USD", Name: "US Dollar"},
-			{Symbol: "GBP", Name: "British Pound Sterling"},
+			{Symbol: "EUR", Name: "Euro", Sign: "€"},
+			{Symbol: "USD", Name: "US Dollar", Sign: "$"},
+			{Symbol: "GBP", Name: "British Pound Sterling", Sign: "£"},
 		}
 
 		if len(record.Data) != len(wantSymbols) {
@@ -409,6 +410,9 @@ func TestGetCurrenciesEndpoint(t *testing.T) {
 			}
 			if got.Name != want.Name {
 				t.Errorf("data[%d].name = %q, want %q", i, got.Name, want.Name)
+			}
+			if got.Sign != want.Sign {
+				t.Errorf("data[%d].sign = %q, want %q", i, got.Sign, want.Sign)
 			}
 		}
 	})

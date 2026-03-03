@@ -49,9 +49,9 @@ func TestGetCurrenciesHandler(t *testing.T) {
 			mockErr:        nil,
 			wantStatusCode: http.StatusOK,
 			wantSymbols: []NamedSymbol{
-				{Symbol: "EUR", Name: "Euro"},
-				{Symbol: "USD", Name: "US Dollar"},
-				{Symbol: "GBP", Name: "British Pound Sterling"},
+				{Symbol: "EUR", Name: "Euro", Sign: "€"},
+				{Symbol: "USD", Name: "US Dollar", Sign: "$"},
+				{Symbol: "GBP", Name: "British Pound Sterling", Sign: "£"},
 			},
 		},
 		{
@@ -113,6 +113,9 @@ func TestGetCurrenciesHandler(t *testing.T) {
 					}
 					if record.Data[i].Name != expected.Name {
 						t.Errorf("GetCurrencies() data[%d].name = %q, want %q", i, record.Data[i].Name, expected.Name)
+					}
+					if record.Data[i].Sign != expected.Sign {
+						t.Errorf("GetCurrencies() data[%d].sign = %q, want %q", i, record.Data[i].Sign, expected.Sign)
 					}
 				}
 			}

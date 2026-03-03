@@ -130,9 +130,9 @@ curl "http://localhost:8000/v1/currencies"
 {
   "date": "2025-12-05",
   "data": [
-    {"symbol": "EUR", "name": "Euro"},
-    {"symbol": "USD", "name": "US Dollar"},
-    {"symbol": "GBP", "name": "British Pound Sterling"}
+    {"symbol": "EUR", "name": "Euro", "sign": "€"},
+    {"symbol": "USD", "name": "US Dollar", "sign": "$"},
+    {"symbol": "GBP", "name": "British Pound Sterling", "sign": "£"}
   ]
 }
 ```
