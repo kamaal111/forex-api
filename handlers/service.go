@@ -91,13 +91,9 @@ func (s *RatesService) GetAllNamedSymbols() (*CurrenciesRecord, error) {
 
 	named := make([]NamedSymbol, 0, len(record.Symbols))
 	for _, symbol := range record.Symbols {
-		name := symbol
-		sign := ""
 		if info, ok := CurrencyNames[symbol]; ok {
-			name = info.Name
-			sign = info.Sign
+			named = append(named, NamedSymbol{Symbol: symbol, Name: info.Name, Sign: info.Sign})
 		}
-		named = append(named, NamedSymbol{Symbol: symbol, Name: name, Sign: sign})
 	}
 
 	return &CurrenciesRecord{Date: record.Date, Data: named}, nil
