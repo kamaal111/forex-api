@@ -10,11 +10,11 @@ import (
 	"github.com/kamaal111/forex-api/utils"
 )
 
-func TestableSymbolsHandler(repo RatesRepository) http.HandlerFunc {
+func TestableCurrenciesHandler(repo RatesRepository) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		service := NewRatesService(repo)
 
-		record, err := service.GetAllSymbols()
+		record, err := service.GetAllNamedSymbols()
 		if err != nil {
 			utils.ErrorHandler(writer, err.Error(), http.StatusInternalServerError)
 			return
@@ -35,34 +35,38 @@ func TestableSymbolsHandler(repo RatesRepository) http.HandlerFunc {
 	}
 }
 
-func TestGetSymbolsHandler(t *testing.T) {
+func TestGetCurrenciesHandler(t *testing.T) {
 	tests := []struct {
 		name           string
 		mockRecord     *SymbolsRecord
 		mockErr        error
 		wantStatusCode int
-		wantRecord     *SymbolsRecord
+		wantSymbols    []NamedSymbol
 	}{
 		{
-			name:           "returns only symbols that have rates in the database",
+			name:           "returns named symbols for symbols that have rates in the database",
 			mockRecord:     &SymbolsRecord{Date: "2025-11-21", Symbols: []string{"EUR", "USD", "GBP"}},
 			mockErr:        nil,
 			wantStatusCode: http.StatusOK,
-			wantRecord:     &SymbolsRecord{Date: "2025-11-21", Symbols: []string{"EUR", "USD", "GBP"}},
+			wantSymbols: []NamedSymbol{
+				{Symbol: "EUR", Name: "Euro"},
+				{Symbol: "USD", Name: "US Dollar"},
+				{Symbol: "GBP", Name: "British Pound Sterling"},
+			},
 		},
 		{
 			name:           "returns 404 when no data exists in the database",
 			mockRecord:     nil,
 			mockErr:        nil,
 			wantStatusCode: http.StatusNotFound,
-			wantRecord:     nil,
+			wantSymbols:    nil,
 		},
 		{
 			name:           "returns 500 on database error",
 			mockRecord:     nil,
 			mockErr:        errors.New("database error"),
 			wantStatusCode: http.StatusInternalServerError,
-			wantRecord:     nil,
+			wantSymbols:    nil,
 		},
 	}
 
@@ -74,42 +78,41 @@ func TestGetSymbolsHandler(t *testing.T) {
 				},
 			}
 
-			handler := TestableSymbolsHandler(mockRepo)
+			handler := TestableCurrenciesHandler(mockRepo)
 
-			req := httptest.NewRequest(http.MethodGet, SymbolsPath, nil)
+			req := httptest.NewRequest(http.MethodGet, CurrenciesPath, nil)
 			recorder := httptest.NewRecorder()
 
 			handler(recorder, req)
 
 			if recorder.Code != tt.wantStatusCode {
-				t.Errorf("GetSymbols() status = %d, want %d", recorder.Code, tt.wantStatusCode)
+				t.Errorf("GetCurrencies() status = %d, want %d", recorder.Code, tt.wantStatusCode)
 			}
 
-			if tt.wantRecord != nil {
+			if tt.wantSymbols != nil {
 				contentType := recorder.Header().Get("content-type")
 				if contentType != "application/json" {
-					t.Errorf("GetSymbols() content-type = %q, want %q", contentType, "application/json")
+					t.Errorf("GetCurrencies() content-type = %q, want %q", contentType, "application/json")
 				}
 
-				var record SymbolsRecord
+				var record CurrenciesRecord
 				if err := json.NewDecoder(recorder.Body).Decode(&record); err != nil {
 					t.Fatalf("failed to decode response: %v", err)
 				}
 
-				if record.Date != tt.wantRecord.Date {
-					t.Errorf("GetSymbols() date = %q, want %q", record.Date, tt.wantRecord.Date)
+				if len(record.Data) != len(tt.wantSymbols) {
+					t.Errorf("GetCurrencies() returned %d symbols, want %d", len(record.Data), len(tt.wantSymbols))
 				}
 
-				if len(record.Symbols) != len(tt.wantRecord.Symbols) {
-					t.Errorf("GetSymbols() returned %d symbols, want %d", len(record.Symbols), len(tt.wantRecord.Symbols))
-				}
-
-				for i, expected := range tt.wantRecord.Symbols {
-					if i >= len(record.Symbols) {
+				for i, expected := range tt.wantSymbols {
+					if i >= len(record.Data) {
 						break
 					}
-					if record.Symbols[i] != expected {
-						t.Errorf("GetSymbols() symbols[%d] = %q, want %q", i, record.Symbols[i], expected)
+					if record.Data[i].Symbol != expected.Symbol {
+						t.Errorf("GetCurrencies() data[%d].symbol = %q, want %q", i, record.Data[i].Symbol, expected.Symbol)
+					}
+					if record.Data[i].Name != expected.Name {
+						t.Errorf("GetCurrencies() data[%d].name = %q, want %q", i, record.Data[i].Name, expected.Name)
 					}
 				}
 			}

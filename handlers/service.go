@@ -17,6 +17,16 @@ type SymbolsRecord struct {
 	Symbols []string `json:"symbols" firestore:"symbols"`
 }
 
+type NamedSymbol struct {
+	Symbol string `json:"symbol"`
+	Name   string `json:"name"`
+}
+
+type CurrenciesRecord struct {
+	Date string        `json:"date"`
+	Data []NamedSymbol `json:"data"`
+}
+
 type RatesRepository interface {
 	GetLatestRate(base string) (*ExchangeRateRecord, error)
 	GetAllSymbols() (*SymbolsRecord, error)
@@ -64,6 +74,27 @@ func (s *RatesService) GetAllSymbols() (*SymbolsRecord, error) {
 	return s.Repository.GetAllSymbols()
 }
 
+func (s *RatesService) GetAllNamedSymbols() (*CurrenciesRecord, error) {
+	record, err := s.Repository.GetAllSymbols()
+	if err != nil {
+		return nil, err
+	}
+	if record == nil {
+		return nil, nil
+	}
+
+	named := make([]NamedSymbol, 0, len(record.Symbols))
+	for _, symbol := range record.Symbols {
+		name, ok := CurrencyNames[symbol]
+		if !ok {
+			name = symbol
+		}
+		named = append(named, NamedSymbol{Symbol: symbol, Name: name})
+	}
+
+	return &CurrenciesRecord{Date: record.Date, Data: named}, nil
+}
+
 func NormalizeBase(base string) string {
 	normalized := strings.ToUpper(strings.TrimSpace(base))
 	if !utils.ArrayContains(Currencies, normalized) {
@@ -88,47 +119,55 @@ func MakeSymbolsArray(raw string, base string) []string {
 	return symbolsArray
 }
 
-var Currencies = []string{
-	"EUR",
-	"USD",
-	"JPY",
-	"BGN",
-	"CYP",
-	"CZK",
-	"DKK",
-	"EEK",
-	"GBP",
-	"HUF",
-	"LTL",
-	"LVL",
-	"MTL",
-	"PLN",
-	"ROL",
-	"RON",
-	"SEK",
-	"SIT",
-	"SKK",
-	"CHF",
-	"ISK",
-	"ILS",
-	"NOK",
-	"HRK",
-	"RUB",
-	"TRL",
-	"TRY",
-	"AUD",
-	"BRL",
-	"CAD",
-	"CNY",
-	"HKD",
-	"IDR",
-	"INR",
-	"KRW",
-	"MXN",
-	"MYR",
-	"NZD",
-	"PHP",
-	"SGD",
-	"THB",
-	"ZAR",
+var CurrencyNames = map[string]string{
+	"EUR": "Euro",
+	"USD": "US Dollar",
+	"JPY": "Japanese Yen",
+	"BGN": "Bulgarian Lev",
+	"CYP": "Cypriot Pound",
+	"CZK": "Czech Koruna",
+	"DKK": "Danish Krone",
+	"EEK": "Estonian Kroon",
+	"GBP": "British Pound Sterling",
+	"HUF": "Hungarian Forint",
+	"LTL": "Lithuanian Litas",
+	"LVL": "Latvian Lats",
+	"MTL": "Maltese Lira",
+	"PLN": "Polish Zloty",
+	"ROL": "Romanian Leu (old)",
+	"RON": "Romanian Leu",
+	"SEK": "Swedish Krona",
+	"SIT": "Slovenian Tolar",
+	"SKK": "Slovak Koruna",
+	"CHF": "Swiss Franc",
+	"ISK": "Icelandic Krona",
+	"ILS": "Israeli New Shekel",
+	"NOK": "Norwegian Krone",
+	"HRK": "Croatian Kuna",
+	"RUB": "Russian Ruble",
+	"TRL": "Turkish Lira (old)",
+	"TRY": "Turkish Lira",
+	"AUD": "Australian Dollar",
+	"BRL": "Brazilian Real",
+	"CAD": "Canadian Dollar",
+	"CNY": "Chinese Yuan",
+	"HKD": "Hong Kong Dollar",
+	"IDR": "Indonesian Rupiah",
+	"INR": "Indian Rupee",
+	"KRW": "South Korean Won",
+	"MXN": "Mexican Peso",
+	"MYR": "Malaysian Ringgit",
+	"NZD": "New Zealand Dollar",
+	"PHP": "Philippine Peso",
+	"SGD": "Singapore Dollar",
+	"THB": "Thai Baht",
+	"ZAR": "South African Rand",
 }
+
+var Currencies = func() []string {
+	keys := make([]string, 0, len(CurrencyNames))
+	for k := range CurrencyNames {
+		keys = append(keys, k)
+	}
+	return keys
+}()

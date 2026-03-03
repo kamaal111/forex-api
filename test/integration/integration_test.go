@@ -22,6 +22,16 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+type NamedSymbol struct {
+	Symbol string `json:"symbol"`
+	Name   string `json:"name"`
+}
+
+type CurrenciesRecord struct {
+	Date string        `json:"date"`
+	Data []NamedSymbol `json:"data"`
+}
+
 func TestGetLatestEndpoint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -318,6 +328,159 @@ func TestGetSymbolsEndpoint(t *testing.T) {
 			if record.Symbols[i] != expected {
 				t.Errorf("Expected symbols[%d] = %q, got %q", i, expected, record.Symbols[i])
 			}
+		}
+	})
+}
+
+func TestGetCurrenciesEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	tc := NewTestContext()
+	if err := tc.Setup(0); err != nil {
+		t.Fatalf("Failed to setup test context: %v", err)
+	}
+	defer tc.Teardown()
+
+	t.Run("returns 404 when no data exists in the database", func(t *testing.T) {
+		if err := tc.ClearCollection("symbols"); err != nil {
+			t.Fatalf("Failed to clear collection: %v", err)
+		}
+
+		resp, err := tc.Server.GetCurrencies()
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("Expected status 404, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("returns named symbols with human-readable names", func(t *testing.T) {
+		if err := tc.ClearCollection("symbols"); err != nil {
+			t.Fatalf("Failed to clear collection: %v", err)
+		}
+
+		_, err := tc.DB.Collection("symbols").Doc("2025-11-21").Set(tc.Ctx, map[string]interface{}{
+			"date":    "2025-11-21",
+			"symbols": []string{"EUR", "USD", "GBP"},
+		})
+		if err != nil {
+			t.Fatalf("Failed to seed data: %v", err)
+		}
+
+		resp, err := tc.Server.GetCurrencies()
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			t.Fatalf("Expected status 200, got %d: %s", resp.StatusCode, string(body))
+		}
+
+		var record CurrenciesRecord
+		if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
+			t.Fatalf("Failed to decode response: %v", err)
+		}
+
+		if record.Date != "2025-11-21" {
+			t.Errorf("Expected date %q, got %q", "2025-11-21", record.Date)
+		}
+
+		wantSymbols := []NamedSymbol{
+			{Symbol: "EUR", Name: "Euro"},
+			{Symbol: "USD", Name: "US Dollar"},
+			{Symbol: "GBP", Name: "British Pound Sterling"},
+		}
+
+		if len(record.Data) != len(wantSymbols) {
+			t.Fatalf("Expected %d symbols, got %d: %v", len(wantSymbols), len(record.Data), record.Data)
+		}
+
+		for i, want := range wantSymbols {
+			got := record.Data[i]
+			if got.Symbol != want.Symbol {
+				t.Errorf("data[%d].symbol = %q, want %q", i, got.Symbol, want.Symbol)
+			}
+			if got.Name != want.Name {
+				t.Errorf("data[%d].name = %q, want %q", i, got.Name, want.Name)
+			}
+		}
+	})
+
+	t.Run("returns only the latest symbols from the database", func(t *testing.T) {
+		if err := tc.ClearCollection("symbols"); err != nil {
+			t.Fatalf("Failed to clear collection: %v", err)
+		}
+
+		_, err := tc.DB.Collection("symbols").Doc("2025-11-20").Set(tc.Ctx, map[string]interface{}{
+			"date":    "2025-11-20",
+			"symbols": []string{"EUR", "USD"},
+		})
+		if err != nil {
+			t.Fatalf("Failed to seed older data: %v", err)
+		}
+
+		_, err = tc.DB.Collection("symbols").Doc("2025-11-21").Set(tc.Ctx, map[string]interface{}{
+			"date":    "2025-11-21",
+			"symbols": []string{"EUR", "USD", "GBP"},
+		})
+		if err != nil {
+			t.Fatalf("Failed to seed latest data: %v", err)
+		}
+
+		resp, err := tc.Server.GetCurrencies()
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			t.Fatalf("Expected status 200, got %d: %s", resp.StatusCode, string(body))
+		}
+
+		var record CurrenciesRecord
+		if err := json.NewDecoder(resp.Body).Decode(&record); err != nil {
+			t.Fatalf("Failed to decode response: %v", err)
+		}
+
+		if record.Date != "2025-11-21" {
+			t.Errorf("Expected date %q, got %q", "2025-11-21", record.Date)
+		}
+
+		if len(record.Data) != 3 {
+			t.Errorf("Expected 3 symbols from latest entry, got %d: %v", len(record.Data), record.Data)
+		}
+	})
+
+	t.Run("response has application/json content-type", func(t *testing.T) {
+		if err := tc.ClearCollection("symbols"); err != nil {
+			t.Fatalf("Failed to clear collection: %v", err)
+		}
+
+		_, err := tc.DB.Collection("symbols").Doc("2025-11-21").Set(tc.Ctx, map[string]interface{}{
+			"date":    "2025-11-21",
+			"symbols": []string{"EUR"},
+		})
+		if err != nil {
+			t.Fatalf("Failed to seed data: %v", err)
+		}
+
+		resp, err := tc.Server.GetCurrencies()
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
+		defer resp.Body.Close()
+
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != "application/json" {
+			t.Errorf("Expected Content-Type application/json, got %s", contentType)
 		}
 	})
 }

@@ -17,6 +17,7 @@ func Start() {
 
 	mux := http.NewServeMux()
 	ratesGroup(mux)
+	currenciesGroup(mux)
 	mux.Handle("/", loggerMiddleware(http.HandlerFunc(notFound)))
 
 	log.Printf("Listening on %s...", serverAddress)
