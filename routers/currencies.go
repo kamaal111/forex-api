@@ -7,5 +7,5 @@ import (
 )
 
 func currenciesGroup(mux *http.ServeMux) {
-	mux.Handle("/v1/currencies", loggerMiddleware(http.HandlerFunc(handlers.GetCurrencies)))
+	mux.Handle(handlers.CurrenciesPath, loggerMiddleware(http.HandlerFunc(handlers.GetCurrencies)))
 }

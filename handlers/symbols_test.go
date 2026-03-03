@@ -76,7 +76,7 @@ func TestGetSymbolsHandler(t *testing.T) {
 
 			handler := TestableSymbolsHandler(mockRepo)
 
-			req := httptest.NewRequest(http.MethodGet, "/v1/rates/symbols", nil)
+			req := httptest.NewRequest(http.MethodGet, SymbolsPath, nil)
 			recorder := httptest.NewRecorder()
 
 			handler(recorder, req)

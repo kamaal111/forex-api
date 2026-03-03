@@ -111,7 +111,7 @@ func TestGetLatestHandler(t *testing.T) {
 
 			handler := TestableHandler(mockRepo)
 
-			req := httptest.NewRequest(http.MethodGet, "/v1/rates/latest"+tt.queryParams, nil)
+			req := httptest.NewRequest(http.MethodGet, LatestPath+tt.queryParams, nil)
 			recorder := httptest.NewRecorder()
 
 			handler(recorder, req)
@@ -192,7 +192,7 @@ func TestGetLatestHandler_SymbolsFiltering(t *testing.T) {
 
 			handler := TestableHandler(mockRepo)
 
-			req := httptest.NewRequest(http.MethodGet, "/v1/rates/latest?symbols="+tt.symbols, nil)
+			req := httptest.NewRequest(http.MethodGet, LatestPath+"?symbols="+tt.symbols, nil)
 			recorder := httptest.NewRecorder()
 
 			handler(recorder, req)

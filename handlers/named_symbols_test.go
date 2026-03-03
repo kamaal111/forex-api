@@ -80,7 +80,7 @@ func TestGetCurrenciesHandler(t *testing.T) {
 
 			handler := TestableCurrenciesHandler(mockRepo)
 
-			req := httptest.NewRequest(http.MethodGet, "/v1/rates/currencies", nil)
+			req := httptest.NewRequest(http.MethodGet, CurrenciesPath, nil)
 			recorder := httptest.NewRecorder()
 
 			handler(recorder, req)
