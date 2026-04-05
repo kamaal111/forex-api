@@ -18,6 +18,10 @@
   - `just test` or `npm run test:unit` — unit tests only.
   - `just test-integration` or `npm test` — integration tests via emulator.
   - `just test-all` or `npm run test:all` — unit + integration.
+- OpenAPI docs:
+  - `just generate-docs` — regenerate `docs/` from swagger annotations (requires `swag` CLI: `go install github.com/swaggo/swag/cmd/swag@latest`).
+  - Generated files (`docs/docs.go`, `docs/swagger.json`, `docs/swagger.yaml`) must be committed; CI verifies they are in sync.
+  - The spec is served at runtime via `GET /openapi.yaml`.
 - Docker:
   - `just build` then `just run` (maps port and sets envs).
 

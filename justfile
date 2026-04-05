@@ -1,7 +1,3 @@
-# Start the Firestore emulator manually
-start-db:
-    gcloud emulators firestore start
-
 # Run the development server with hot reload
 dev:
     #!/bin/sh
@@ -11,6 +7,10 @@ dev:
     export FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"
 
     ~/go/bin/reflex -r '\.go' -s -- sh -c "go run ."
+
+# Start the Firestore emulator manually
+start-db:
+    gcloud emulators firestore start
 
 # Run unit tests only (no emulator needed)
 test:
@@ -31,6 +31,10 @@ test-integration:
 # Run all tests including integration tests with Firestore emulator
 test-all:
     pnpm run test:all
+
+# Generate OpenAPI documentation from swagger annotations
+generate-docs:
+    swag init -g main.go --parseDependency --parseInternal
 
 # Build the Docker image
 build:

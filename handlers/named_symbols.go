@@ -9,6 +9,16 @@ import (
 	"github.com/kamaal111/forex-api/utils"
 )
 
+// GetCurrencies handles requests for currencies with names and signs.
+//
+// @Summary      Get currencies with names and signs
+// @Description  Returns all available currencies with their human-readable names and currency signs.
+// @Tags         currencies
+// @Produce      json
+// @Success      200  {object}  CurrenciesRecord
+// @Failure      404  {object}  utils.Error
+// @Failure      500  {object}  utils.Error
+// @Router       /v1/currencies [get]
 func GetCurrencies(writer http.ResponseWriter, request *http.Request) {
 	ctx := context.Background()
 	client, err := database.CreateClient(ctx)
