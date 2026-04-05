@@ -5,6 +5,7 @@ on:
 
 env:
     PNPM_VERSION: 10.23.0
+    SWAG_VERSION: v1.16.6
 
 concurrency:
     group: ${{ github.ref }}
@@ -41,6 +42,14 @@ jobs:
 
             - name: Install pnpm dependencies
               run: pnpm install
+
+            - name: Install swag
+              run: go install github.com/swaggo/swag/cmd/swag@${{ env.SWAG_VERSION }}
+
+            - name: Check OpenAPI docs are up to date
+              run: |
+                  swag init -g main.go --parseDependency --parseInternal
+                  git diff --exit-code docs/
 
             - name: Run tests
               run: pnpm run test:all

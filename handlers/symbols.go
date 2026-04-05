@@ -9,6 +9,16 @@ import (
 	"github.com/kamaal111/forex-api/utils"
 )
 
+// GetSymbols handles requests for available currency symbols.
+//
+// @Summary      Get available currency symbols
+// @Description  Returns a list of all available currency symbols.
+// @Tags         rates
+// @Produce      json
+// @Success      200  {object}  SymbolsRecord
+// @Failure      404  {object}  utils.Error
+// @Failure      500  {object}  utils.Error
+// @Router       /v1/rates/symbols [get]
 func GetSymbols(writer http.ResponseWriter, request *http.Request) {
 	ctx := context.Background()
 	client, err := database.CreateClient(ctx)

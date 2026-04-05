@@ -79,6 +79,18 @@ func (r *FirestoreRatesRepository) GetAllSymbols() (*SymbolsRecord, error) {
 
 var ErrRatesNotFound = errors.New("rates not found")
 
+// GetLatest handles requests for the latest exchange rates.
+//
+// @Summary      Get latest exchange rates
+// @Description  Get the latest currency exchange rates, optionally filtered by base currency and target symbols.
+// @Tags         rates
+// @Produce      json
+// @Param        base     query     string  false  "Base currency code (default: EUR)"
+// @Param        symbols  query     string  false  "Comma-separated list of target currency symbols"
+// @Success      200      {object}  ExchangeRateRecord
+// @Failure      404      {object}  utils.Error
+// @Failure      500      {object}  utils.Error
+// @Router       /v1/rates/latest [get]
 func GetLatest(writer http.ResponseWriter, request *http.Request) {
 	ctx := context.Background()
 	client, err := database.CreateClient(ctx)

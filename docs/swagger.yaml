@@ -1,0 +1,143 @@
+basePath: /
+definitions:
+  handlers.CurrenciesRecord:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/handlers.NamedSymbol'
+        type: array
+      date:
+        type: string
+    type: object
+  handlers.ExchangeRateRecord:
+    properties:
+      base:
+        type: string
+      date:
+        type: string
+      rates:
+        additionalProperties:
+          format: float64
+          type: number
+        type: object
+    type: object
+  handlers.NamedSymbol:
+    properties:
+      name:
+        type: string
+      sign:
+        type: string
+      symbol:
+        type: string
+    type: object
+  handlers.SymbolsRecord:
+    properties:
+      date:
+        type: string
+      symbols:
+        items:
+          type: string
+        type: array
+    type: object
+  utils.Error:
+    properties:
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: API for fetching currency exchange rates.
+  title: Forex API
+  version: "1.0"
+paths:
+  /openapi.yaml:
+    get:
+      description: Returns the OpenAPI specification for this API in YAML format.
+      produces:
+      - application/x-yaml
+      responses:
+        "200":
+          description: OpenAPI spec in YAML format
+          schema:
+            type: string
+      summary: Download OpenAPI spec
+      tags:
+      - openapi
+  /v1/currencies:
+    get:
+      description: Returns all available currencies with their human-readable names
+        and currency signs.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.CurrenciesRecord'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Error'
+      summary: Get currencies with names and signs
+      tags:
+      - currencies
+  /v1/rates/latest:
+    get:
+      description: Get the latest currency exchange rates, optionally filtered by
+        base currency and target symbols.
+      parameters:
+      - description: 'Base currency code (default: EUR)'
+        in: query
+        name: base
+        type: string
+      - description: Comma-separated list of target currency symbols
+        in: query
+        name: symbols
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ExchangeRateRecord'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Error'
+      summary: Get latest exchange rates
+      tags:
+      - rates
+  /v1/rates/symbols:
+    get:
+      description: Returns a list of all available currency symbols.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.SymbolsRecord'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Error'
+      summary: Get available currency symbols
+      tags:
+      - rates
+swagger: "2.0"
